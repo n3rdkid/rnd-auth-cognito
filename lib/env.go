@@ -9,7 +9,7 @@ type Env struct {
 	CognitoRegion      string `mapstructure:"COGNITO_REGION"`
 }
 
-// Will be populated by
+// Will be populated by NewEnv
 var env = Env{}
 
 func GetEnv() Env {
