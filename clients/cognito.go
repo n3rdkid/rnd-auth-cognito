@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
@@ -14,5 +16,29 @@ type awsCognitoClient struct {
 }
 
 func NewCognitoClient(cognitoRegion string, cognitoAppClientID string) CognitoClient {
-	return nil
+	conf := &aws.Config{
+		Region: aws.String(cognitoRegion),
+	}
+	sess, err := session.NewSession(conf)
+	client := cognito.New(sess)
+	if err != nil {
+		panic(err)
+	}
+	return &awsCognitoClient{
+		cognitoClient: client,
+		appClientId:   cognitoAppClientID,
+	}
+}
+
+func (ctx *awsCognitoClient) SignUp(email string, password string) (string, error) {
+	user := &cognito.SignUpInput{
+		ClientId: aws.String(ctx.appClientId),
+		Username: aws.String(email),
+		Password: aws.String(password),
+	}
+	result, err := ctx.cognitoClient.SignUp(user)
+	if err != nil {
+		return "", err
+	}
+	return result.String(), err
 }
