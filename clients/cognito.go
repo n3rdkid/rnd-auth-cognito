@@ -8,6 +8,7 @@ import (
 
 type CognitoClient interface {
 	SignUp(email string, password string) (string, error)
+	ConfirmSignUp(email string, code string) (string, error)
 }
 
 type awsCognitoClient struct {
@@ -37,6 +38,19 @@ func (ctx *awsCognitoClient) SignUp(email string, password string) (string, erro
 		Password: aws.String(password),
 	}
 	result, err := ctx.cognitoClient.SignUp(user)
+	if err != nil {
+		return "", err
+	}
+	return result.String(), err
+}
+
+func (ctx *awsCognitoClient) ConfirmSignUp(email string, code string) (string, error) {
+	user := &cognito.ConfirmSignUpInput{
+		ClientId:         aws.String(ctx.appClientId),
+		Username:         aws.String(email),
+		ConfirmationCode: aws.String(code),
+	}
+	result, err := ctx.cognitoClient.ConfirmSignUp(user)
 	if err != nil {
 		return "", err
 	}
