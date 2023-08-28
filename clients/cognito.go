@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -9,6 +11,7 @@ import (
 type CognitoClient interface {
 	SignUp(email string, password string) (string, error)
 	ConfirmSignUp(email string, code string) (string, error)
+	SignIn(email string, password string) (*cognito.InitiateAuthOutput, error)
 }
 
 type awsCognitoClient struct {
@@ -55,4 +58,21 @@ func (ctx *awsCognitoClient) ConfirmSignUp(email string, code string) (string, e
 		return "", err
 	}
 	return result.String(), err
+}
+
+func (ctx *awsCognitoClient) SignIn(email string, password string) (*cognito.InitiateAuthOutput, error) {
+	auth := &cognito.InitiateAuthInput{
+		ClientId: aws.String(ctx.appClientId),
+		AuthFlow: aws.String("USER_PASSWORD_AUTH"),
+		AuthParameters: aws.StringMap(map[string]string{
+			"USERNAME": email,
+			"PASSWORD": password,
+		}),
+	}
+	result, err := ctx.cognitoClient.InitiateAuth(auth)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(*result.AuthenticationResult.IdToken)
+	return result, nil
 }
